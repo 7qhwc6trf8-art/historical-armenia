@@ -124,3 +124,14 @@ Telegram signs every request with `X-Telegram-Bot-Api-Secret-Token`, and the API
 ## Next milestone
 
 Step 3 will add PostgreSQL, an admin/editor role system, reviewed citations, upload metadata, draft/publish workflows and persistent user favorites.
+
+## v0.2.1 Vercel asset fix
+
+This release fixes `text/html` MIME mismatch errors for generated Vite CSS/JS assets.
+
+- Missing `/assets/*` files now return a real 404 instead of the React HTML shell.
+- `index.html` is served with `no-cache, no-store, must-revalidate`.
+- Hashed `/assets/*` files use immutable one-year caching.
+- The production build fails automatically when `index.html` references an asset that does not exist.
+
+After deploying this release, redeploy without the old build cache and perform one hard refresh.

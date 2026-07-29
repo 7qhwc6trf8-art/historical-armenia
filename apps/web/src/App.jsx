@@ -15,6 +15,7 @@ export default function App() {
 
   useEffect(() => {
     const tg = initializeTelegram();
+    tg.requestFullscreen()
     authenticateTelegram(tg?.initData || '')
       .then((result) => setAuth({ status: 'ready', user: result.user, error: null }))
       .catch((error) => setAuth({ status: 'error', user: null, error }));

@@ -2,7 +2,7 @@
 
 A mobile-first React Telegram Mini App for exploring Western and Eastern Armenia through regions, settlements, monuments, maps, timelines, and cited historical material.
 
-This v0.1.1 foundation includes:
+This v0.1.2 foundation includes:
 
 - Premium dark/gold animated React interface
 - Telegram Mini App bootstrap and theme integration
@@ -81,7 +81,7 @@ v0.2 will add PostgreSQL/Prisma, a real SVG/MapLibre historical map, multilingua
 
 ## Windows / Node.js 24 note
 
-Version 0.1.1 starts npm workspaces through Node's npm CLI instead of spawning `npm.cmd` directly. This removes the Windows `spawn EINVAL` failure and the root package now explicitly uses ES modules.
+Version 0.1.2 starts npm workspaces through Node's npm CLI instead of spawning `npm.cmd` directly. This removes the Windows `spawn EINVAL` failure and the root package now explicitly uses ES modules.
 
 If one service needs to be started separately:
 
@@ -90,3 +90,9 @@ npm run dev:web
 npm run dev:api
 npm run dev:bot
 ```
+
+## Vercel deployment — v0.1.2
+
+Version 0.1.2 adds a root Express entry point, builds React into the root `public` directory, serves React Router routes safely, and keeps `/api` on the same HTTPS origin. See [`docs/VERCEL.md`](docs/VERCEL.md) for the complete deployment steps.
+
+Important: in Vercel, keep the project **Root Directory** at the repository root. Do not select `apps/web`, because that would deploy only the interface and omit Telegram authentication and the protected API.

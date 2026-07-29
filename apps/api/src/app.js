@@ -17,7 +17,7 @@ export function createApp() {
   app.disable('x-powered-by');
   app.set('trust proxy', config.TRUST_PROXY);
 
-  app.use(helmet({
+  app.use('/api', helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'none'"],
@@ -56,7 +56,7 @@ export function createApp() {
     message: { error: 'AUTH_RATE_LIMITED', message: 'Too many sign-in attempts.' },
   }));
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'vha-api', version: '0.1.1' }));
+  app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'vha-api', version: '0.1.2' }));
   app.use('/api/auth', authRouter);
   app.use('/api/content', contentRouter);
 
@@ -79,7 +79,7 @@ export function createApp() {
     return res.json({ ok: true, placeId, favorite: true });
   });
 
-  app.use((_req, res) => res.status(404).json({ error: 'NOT_FOUND', message: 'Route not found.' }));
+  app.use('/api', (_req, res) => res.status(404).json({ error: 'NOT_FOUND', message: 'Route not found.' }));
 
   app.use((error, _req, res, _next) => {
     if (error instanceof ZodError) {

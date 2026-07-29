@@ -67,7 +67,7 @@ export function createApp() {
     message: { error: 'AUTH_RATE_LIMITED', message: 'Too many sign-in attempts.' },
   }));
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'vha-api', version: '0.3.1', telegramWebhook: config.telegramWebhookEnabled }));
+  app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'vha-api', version: '0.2.0', telegramWebhook: config.telegramWebhookEnabled }));
   app.use('/api/auth', authRouter);
   app.use('/api/content', requireSession, contentRouter);
 

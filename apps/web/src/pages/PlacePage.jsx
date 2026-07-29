@@ -1,11 +1,10 @@
-import { Bookmark, Clock3, Images, Info, MapPinned, ShieldCheck } from 'lucide-react';
+import { Bookmark, ChevronLeft, Clock3, Images, Info, MapPinned, ShieldCheck } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchPlace, toggleFavorite } from '../lib/api.js';
 import { isFavorite, toggleLocalFavorite } from '../lib/favorites.js';
 import { haptic } from '../lib/telegram.js';
-import { usePageHeader } from '../components/PageHeaderContext.jsx';
 
 const tabDefinitions = [
   { id: 'info', label: 'Info', icon: Info },
@@ -21,17 +20,9 @@ export default function PlacePage() {
   const [saved, setSaved] = useState(() => isFavorite(slug));
   const [activeTab, setActiveTab] = useState('info');
 
-  usePageHeader({
-    title: place?.title || 'Place',
-    subtitle: place
-      ? `${place.region === 'western' ? 'Western Armenia' : 'Eastern Armenia'} · ${place.kind}`
-      : 'Historical Record',
-  });
-
   useEffect(() => {
     let active = true;
     setStatus('loading');
-    setPlace(null);
     setSaved(isFavorite(slug));
     fetchPlace(slug)
       .then(({ place: result }) => {
@@ -72,6 +63,7 @@ export default function PlacePage() {
       <section className="place-hero">
         <div className="place-hero__image" style={{ backgroundPosition: place.heroPosition || '72% center' }} />
         <div className="place-hero__shade" />
+        <Link className="place-hero__back" to="/map"><ChevronLeft /></Link>
         <motion.div className="place-hero__title" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
           <span>{place.region === 'western' ? 'Western Armenia' : 'Eastern Armenia'} · {place.kind}</span>
           <h1>{place.title}</h1>

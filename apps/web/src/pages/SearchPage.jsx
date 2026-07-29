@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react';
+import { ChevronLeft, Search, SlidersHorizontal, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -63,6 +63,12 @@ export default function SearchPage() {
 
   return (
     <div className="sub-page search-page">
+      <header className="sub-header">
+        <Link to="/" aria-label="Back"><ChevronLeft /></Link>
+        <div><span>Historical catalog</span><h1>Search</h1></div>
+        <button aria-label="Search filters" onClick={() => haptic('light')}><SlidersHorizontal /></button>
+      </header>
+
       <div className="search-page__input glass-panel">
         <Search size={21} />
         <input

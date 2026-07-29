@@ -1,4 +1,4 @@
-import { Clock3 } from 'lucide-react';
+import { ChevronLeft, Clock3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -26,6 +26,12 @@ export default function TimelinePage() {
 
   return (
     <div className="sub-page timeline-page">
+      <header className="sub-header">
+        <Link to="/" aria-label="Back"><ChevronLeft /></Link>
+        <div><span>Period-aware atlas</span><h1>Timeline</h1></div>
+        <button aria-label="Timeline information" onClick={() => haptic('light')}><Clock3 /></button>
+      </header>
+
       <section className="timeline-intro glass-panel">
         <span>Historical boundaries change over time</span>
         <h2>Select a period before reading a map</h2>

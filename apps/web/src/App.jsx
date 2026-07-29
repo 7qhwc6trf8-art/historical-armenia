@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppShell from './components/AppShell.jsx';
 import { authenticateTelegram } from './lib/api.js';
-import { destroyTelegram, initializeTelegram } from './lib/telegram.js';
+import { initializeTelegram } from './lib/telegram.js';
 import HomePage from './pages/HomePage.jsx';
 import MapPage from './pages/MapPage.jsx';
 import PlacePage from './pages/PlacePage.jsx';
@@ -14,17 +14,10 @@ export default function App() {
   const [auth, setAuth] = useState({ status: 'loading', user: null, error: null });
 
   useEffect(() => {
-    let active = true;
     const tg = initializeTelegram();
-
     authenticateTelegram(tg?.initData || '')
-      .then((result) => active && setAuth({ status: 'ready', user: result.user, error: null }))
-      .catch((error) => active && setAuth({ status: 'error', user: null, error }));
-
-    return () => {
-      active = false;
-      destroyTelegram();
-    };
+      .then((result) => setAuth({ status: 'ready', user: result.user, error: null }))
+      .catch((error) => setAuth({ status: 'error', user: null, error }));
   }, []);
 
   if (auth.status === 'loading') {

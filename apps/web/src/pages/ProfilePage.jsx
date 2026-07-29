@@ -1,4 +1,4 @@
-import { Bookmark, CheckCircle2, Globe2, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
+import { Bookmark, CheckCircle2, ChevronLeft, Globe2, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -22,6 +22,12 @@ export default function ProfilePage({ user }) {
 
   return (
     <div className="sub-page profile-page">
+      <header className="sub-header">
+        <Link to="/" aria-label="Back"><ChevronLeft /></Link>
+        <div><span>Telegram identity</span><h1>Profile</h1></div>
+        <button aria-label="Account security" onClick={() => haptic('light')}><ShieldCheck /></button>
+      </header>
+
       <motion.section className="profile-hero glass-panel" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
         <div className="profile-avatar">{user?.firstName?.slice(0, 1)?.toUpperCase() || <UserRound />}</div>
         <div>

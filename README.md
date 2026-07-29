@@ -1,36 +1,39 @@
 # Virtual Historical Armenia — Telegram Mini App
 
-A mobile-first React Telegram Mini App for exploring Western and Eastern Armenia through regions, settlements, monuments, maps, timelines, and cited historical material.
+A mobile-first React Telegram Mini App for exploring Western and Eastern Armenia through a protected historical catalog, animated discovery map, searchable places and period-aware timelines.
 
-This v0.1.2 foundation includes:
+## v0.2.0 — Step 2
 
-- Premium dark/gold animated React interface
-- Telegram Mini App bootstrap and theme integration
-- Telegram `initData` validation on the API server
-- Short-lived HTTP-only authentication cookie
-- CSRF protection for state-changing routes
-- Helmet security headers, strict CORS/origin checks, request limits, rate limiting, and input validation
-- A Telegraf bot that launches the Mini App
-- Responsive desktop preview for development
+This milestone turns the visual foundation into a functional discovery app:
+
+- Searchable historical place catalog with Armenian and English names
+- Western/Eastern region filters and place-type filters
+- Dynamic place pages loaded from the protected API
+- Animated map markers with selectable place sheets
+- Period-aware timeline with linked places
+- Telegram profile/security page and local favorites
+- Source-first editorial notices and publication-status fields
+- Vercel-compatible Telegram webhook for `/start`, `/app` and `/help`
+- Input validation, short-lived sessions, CSRF, strict origins, rate limits and webhook-secret validation
+
+The bundled place records are seed/demo content. Historical claims, images and boundaries must pass editorial and source review before public publication.
 
 ## Project structure
 
 ```text
 apps/
 ├── web/   React + Vite + Framer Motion
-├── api/   Express 5 secure API
-└── bot/   Telegraf launcher bot
+├── api/   Express 5 secure API and catalog
+└── bot/   Telegraf local-development bot
 ```
 
-## 1. Install
+## Install and run locally
 
 ```bash
 npm install
 ```
 
-## 2. Configure
-
-Copy each example file:
+Copy the environment examples:
 
 ```bash
 cp apps/api/.env.example apps/api/.env
@@ -38,17 +41,22 @@ cp apps/bot/.env.example apps/bot/.env
 cp apps/web/.env.example apps/web/.env
 ```
 
-Use the same Telegram bot token in `apps/api/.env` and `apps/bot/.env`.
+On PowerShell:
 
-Generate the API session secret:
+```powershell
+Copy-Item apps\api\.env.example apps\api\.env
+Copy-Item apps\bot\.env.example apps\bot\.env
+Copy-Item apps\web\.env.example apps\web\.env
+```
+
+Generate secrets:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 ```
 
-## 3. Local development
-
-For browser-only development, leave `DEV_AUTH_BYPASS=true` in the API environment. It is rejected automatically when `NODE_ENV=production`.
+Use the first result for `SESSION_SECRET` and the second for `TELEGRAM_WEBHOOK_SECRET`.
 
 ```bash
 npm run dev
@@ -56,43 +64,63 @@ npm run dev
 
 - Web: http://localhost:5173
 - API: http://localhost:8787
+- Health: http://localhost:8787/api/health
 
-Telegram requires an HTTPS Mini App URL. Use a trusted HTTPS tunnel during development, then set that URL in `apps/bot/.env` as `WEB_APP_URL`.
+`DEV_AUTH_BYPASS=true` is allowed only in local development. Production refuses to start when it is enabled.
 
-## 4. Run inside Telegram
+## Vercel deployment
 
-1. Create a bot with BotFather.
-2. Put its token in both API and bot environment files.
-3. Set `WEB_APP_URL` to your HTTPS frontend URL.
-4. Start the API, web app, and bot.
-5. Open the bot and press **Open Historical Armenia**.
+Deploy from the repository root. The root must contain `server.js`, `vercel.json`, `package.json` and `apps/`.
+
+Required production variables:
+
+```env
+NODE_ENV=production
+TRUST_PROXY=1
+BOT_TOKEN=YOUR_BOTFATHER_TOKEN
+SESSION_SECRET=YOUR_96_CHARACTER_SECRET
+ALLOWED_ORIGINS=https://historical-armenia-web.vercel.app
+DEV_AUTH_BYPASS=false
+TELEGRAM_AUTH_MAX_AGE_SECONDS=600
+SESSION_TTL_SECONDS=900
+WEB_APP_URL=https://historical-armenia-web.vercel.app
+TELEGRAM_WEBHOOK_SECRET=YOUR_RANDOM_WEBHOOK_SECRET
+```
+
+Optional frontend build variable:
+
+```env
+VITE_BOT_USERNAME=your_bot_username_without_at
+```
+
+See [`docs/VERCEL.md`](docs/VERCEL.md) for the exact dashboard settings.
+
+## Enable the Telegram webhook
+
+Put the production values in `apps/api/.env`, then run:
+
+```bash
+npm run telegram:set-webhook
+```
+
+The script registers:
+
+```text
+https://YOUR_DOMAIN/api/telegram/webhook
+```
+
+Telegram signs every request with `X-Telegram-Bot-Api-Secret-Token`, and the API compares it using a timing-safe check.
 
 ## Security boundary
 
-- The bot token exists only on the API and bot processes.
-- The frontend sends Telegram's raw `initData` to the API.
-- The API validates the HMAC, timestamp, and user payload before creating a session.
-- `initDataUnsafe` is used only for non-sensitive visual hints and is never trusted as authentication.
-- Production must use HTTPS and a reverse proxy such as Nginx or Caddy.
+- The bot token and session secret never enter the React bundle.
+- Telegram raw `initData` is validated server-side before a session is issued.
+- Protected content endpoints require a valid signed session.
+- State-changing API calls require a matching CSRF token.
+- Browser origins are allowlisted exactly.
+- The webhook bypasses browser-origin checks only because it has its own Telegram secret-header authentication.
+- Favorites in v0.2.0 are stored on the current device; cross-device synchronization will arrive with the database milestone.
 
 ## Next milestone
 
-v0.2 will add PostgreSQL/Prisma, a real SVG/MapLibre historical map, multilingual content, an admin panel, citations, image storage, and audited content publishing.
-
-## Windows / Node.js 24 note
-
-Version 0.1.2 starts npm workspaces through Node's npm CLI instead of spawning `npm.cmd` directly. This removes the Windows `spawn EINVAL` failure and the root package now explicitly uses ES modules.
-
-If one service needs to be started separately:
-
-```powershell
-npm run dev:web
-npm run dev:api
-npm run dev:bot
-```
-
-## Vercel deployment — v0.1.2
-
-Version 0.1.2 adds a root Express entry point, builds React into the root `public` directory, serves React Router routes safely, and keeps `/api` on the same HTTPS origin. See [`docs/VERCEL.md`](docs/VERCEL.md) for the complete deployment steps.
-
-Important: in Vercel, keep the project **Root Directory** at the repository root. Do not select `apps/web`, because that would deploy only the interface and omit Telegram authentication and the protected API.
+Step 3 will add PostgreSQL, an admin/editor role system, reviewed citations, upload metadata, draft/publish workflows and persistent user favorites.

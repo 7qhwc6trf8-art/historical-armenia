@@ -6,7 +6,9 @@ import { initializeTelegram } from './lib/telegram.js';
 import HomePage from './pages/HomePage.jsx';
 import MapPage from './pages/MapPage.jsx';
 import PlacePage from './pages/PlacePage.jsx';
-import PlaceholderPage from './pages/PlaceholderPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import SearchPage from './pages/SearchPage.jsx';
+import TimelinePage from './pages/TimelinePage.jsx';
 
 export default function App() {
   const [auth, setAuth] = useState({ status: 'loading', user: null, error: null });
@@ -29,11 +31,17 @@ export default function App() {
   }
 
   if (auth.status === 'error') {
+    const username = String(import.meta.env.VITE_BOT_USERNAME || '').replace(/^@/, '');
     return (
       <div className="boot-screen boot-screen--error">
         <div className="boot-mark">!</div>
-        <h1>Secure sign-in failed</h1>
-        <p>{auth.error?.message || 'Open this Mini App from its Telegram bot.'}</p>
+        <h1>Open inside Telegram</h1>
+        <p>{auth.error?.message || 'This protected Mini App requires Telegram authentication.'}</p>
+        {username && (
+          <a className="telegram-open-button" href={`https://t.me/${username}`}>
+            Open @{username}
+          </a>
+        )}
       </div>
     );
   }
@@ -44,9 +52,9 @@ export default function App() {
         <Route path="/" element={<HomePage user={auth.user} />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/place/:slug" element={<PlacePage />} />
-        <Route path="/search" element={<PlaceholderPage title="Search" description="Multilingual fuzzy search across regions, settlements and monuments." />} />
-        <Route path="/timeline" element={<PlaceholderPage title="Timeline" description="Animated historical periods and border layers will be implemented here." />} />
-        <Route path="/profile" element={<PlaceholderPage title="Your profile" description="Favorites, language, reading history and Telegram identity." />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/timeline" element={<TimelinePage />} />
+        <Route path="/profile" element={<ProfilePage user={auth.user} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

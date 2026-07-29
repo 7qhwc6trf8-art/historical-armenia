@@ -16,6 +16,7 @@ export default function RegionCard({ region, index }) {
         <span className="region-card__eyebrow">Explore</span>
         <h2>{region.title}</h2>
         <p>{region.subtitle}</p>
+        {Number.isFinite(region.placeCount) && <small className="region-card__count">{region.placeCount} catalog places</small>}
         <span className="region-card__cta">
           Open atlas <ArrowUpRight size={17} />
         </span>

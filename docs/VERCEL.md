@@ -1,68 +1,69 @@
-# Deploy Virtual Historical Armenia to Vercel
+# Vercel deployment
 
-Version 0.1.2 deploys the React frontend and protected Express API as one Vercel project and one HTTPS origin. This is important because the authentication cookie is host-only and SameSite=Strict.
+## Project settings
 
-## 1. Push to GitHub
+Import the repository and keep the project root at the repository root.
 
-Never commit any `.env` file.
-
-```powershell
-git init
-git add .
-git commit -m "Prepare VHA for Vercel"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/virtual-historical-armenia.git
-git push -u origin main
+```text
+Framework Preset: Express
+Root Directory: ./
+Install Command: npm install
+Build Command: npm run build
+Output Directory: empty
+Node.js Version: 22.x
 ```
 
-## 2. Create the Vercel project
+Do not select `apps/web`; that would omit the Express API and Telegram authentication.
 
-- Import the GitHub repository.
-- Keep **Root Directory** at the repository root.
-- The included `vercel.json` selects the Express framework and runs the React build.
-- Do not set the root directory to `apps/web`, because that would omit the protected API.
+## Production variables
 
-## 3. Add production environment variables
-
-Add these for Production in Vercel Project Settings → Environment Variables:
+Add every variable as its own Vercel row:
 
 ```env
 NODE_ENV=production
 TRUST_PROXY=1
 BOT_TOKEN=YOUR_BOTFATHER_TOKEN
-SESSION_SECRET=PASTE_A_RANDOM_48_BYTE_HEX_SECRET
-ALLOWED_ORIGINS=https://YOUR_PROJECT.vercel.app
+SESSION_SECRET=YOUR_96_CHARACTER_RANDOM_SECRET
+ALLOWED_ORIGINS=https://historical-armenia-web.vercel.app
 DEV_AUTH_BYPASS=false
 TELEGRAM_AUTH_MAX_AGE_SECONDS=600
 SESSION_TTL_SECONDS=900
+WEB_APP_URL=https://historical-armenia-web.vercel.app
+TELEGRAM_WEBHOOK_SECRET=YOUR_RANDOM_WEBHOOK_SECRET
+VITE_BOT_USERNAME=your_bot_username_without_at
 ```
 
-Generate `SESSION_SECRET` locally:
+`ALLOWED_ORIGINS` and `WEB_APP_URL` must use the exact deployed HTTPS origin without a trailing slash.
 
-```powershell
-node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
-```
+After changing variables, create a new deployment. Existing deployments do not receive newly added values.
 
-After changing environment variables, redeploy.
-
-## 4. Verify the deployment
+## Verify
 
 Open:
 
 ```text
-https://YOUR_PROJECT.vercel.app/api/health
+https://YOUR_DOMAIN/api/health
 ```
 
-Expected result:
+Expected shape:
 
 ```json
-{"ok":true,"service":"vha-api","version":"0.1.2"}
+{
+  "ok": true,
+  "service": "vha-api",
+  "version": "0.2.0",
+  "telegramWebhook": true
+}
 ```
 
-Opening the site in a normal browser should show `Secure sign-in failed`. That is expected in production because browser development bypass is disabled. Open it from Telegram to authenticate.
+The root page should load bundled files under `/assets/`; it must not request `/src/main.jsx` in production.
 
-## 5. Connect Telegram
+## Register the bot webhook
 
-Set the deployed HTTPS URL as the Mini App URL in BotFather. Also use the same URL for `WEB_APP_URL` when running the optional Telegraf launcher bot.
+Copy the production variables into `apps/api/.env`, then run locally:
 
-The current launcher in `apps/bot` uses long polling and must run on a persistent Node.js host. Vercel should use a Telegram webhook instead; that conversion is planned for the next milestone. The Mini App itself can still be opened through BotFather's configured Main Mini App/menu button without a continuously running launcher process.
+```bash
+npm run telegram:set-webhook
+```
+
+After Telegram confirms the webhook, `/start`, `/app` and `/help` can run through the Vercel function. Do not run the long-polling Telegraf process at the same time as the webhook.

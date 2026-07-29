@@ -1,37 +1,49 @@
 import { BookOpenText, Church, Landmark, MapPinned, Search, SlidersHorizontal } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import RegionCard from '../components/RegionCard.jsx';
 import { fetchHomeContent } from '../lib/api.js';
 import { haptic } from '../lib/telegram.js';
 
 const fallback = {
   regions: [
-    { id: 'western', title: 'Western Armenia', subtitle: 'Historic provinces, cities and monuments' },
-    { id: 'eastern', title: 'Eastern Armenia', subtitle: 'Regions, settlements and cultural heritage' },
+    { id: 'western', title: 'Western Armenia', subtitle: 'Historic provinces, cities and monuments', placeCount: 6 },
+    { id: 'eastern', title: 'Eastern Armenia', subtitle: 'Regions, settlements and cultural heritage', placeCount: 6 },
   ],
   periods: [
     { id: 'ancient', title: 'Ancient', range: 'Before 301' },
-    { id: 'medieval', title: 'Medieval', range: '301–1800' },
-    { id: 'modern', title: '19th Century', range: '1800–1918' },
+    { id: 'medieval', title: 'Medieval', range: '301–1799' },
+    { id: 'nineteenth', title: '19th Century', range: '1800–1917' },
     { id: 'republic', title: '1918–1920', range: 'First Republic' },
   ],
+  featured: [{ slug: 'van', title: 'Van Province', summary: 'Historic Armenian province surrounding Lake Van.' }],
+  stats: { places: 12, regions: 2, periods: 6 },
 };
 
 const shortcuts = [
   { icon: MapPinned, label: 'Regions', to: '/map' },
-  { icon: Landmark, label: 'Settlements', to: '/search?type=settlement' },
-  { icon: Church, label: 'Monuments', to: '/search?type=monument' },
+  { icon: Landmark, label: 'Settlements', to: '/search?kind=city' },
+  { icon: Church, label: 'Monuments', to: '/search?kind=monument' },
   { icon: BookOpenText, label: 'History', to: '/timeline' },
 ];
 
 export default function HomePage({ user }) {
   const [content, setContent] = useState(fallback);
+  const [query, setQuery] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchHomeContent().then(setContent).catch(() => setContent(fallback));
   }, []);
+
+  const submitSearch = (event) => {
+    event.preventDefault();
+    haptic('selection');
+    navigate(query.trim() ? `/search?q=${encodeURIComponent(query.trim())}` : '/search');
+  };
+
+  const featured = content.featured?.[0] || fallback.featured[0];
 
   return (
     <div className="home-page">
@@ -52,18 +64,30 @@ export default function HomePage({ user }) {
       </section>
 
       <section className="content-stack">
-        <motion.div
+        <motion.form
           className="search-box glass-panel"
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.08 }}
+          onSubmit={submitSearch}
         >
           <Search size={21} />
-          <input aria-label="Search" placeholder="Search regions, cities, monuments…" />
-          <motion.button whileTap={{ scale: 0.9 }} aria-label="Open filters" onClick={() => haptic('light')}>
+          <input
+            aria-label="Search"
+            placeholder="Search regions, cities, monuments…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value.slice(0, 80))}
+          />
+          <motion.button whileTap={{ scale: 0.9 }} aria-label="Search and open filters" type="submit">
             <SlidersHorizontal size={19} />
           </motion.button>
-        </motion.div>
+        </motion.form>
+
+        <div className="atlas-stats" aria-label="Atlas statistics">
+          <span><strong>{content.stats?.places ?? 12}</strong> places</span>
+          <span><strong>{content.stats?.periods ?? 6}</strong> periods</span>
+          <span><strong>{content.stats?.regions ?? 2}</strong> atlases</span>
+        </div>
 
         <div className="region-grid">
           {content.regions.map((region, index) => (
@@ -101,7 +125,10 @@ export default function HomePage({ user }) {
                 className={`period-card ${index === 2 ? 'is-selected' : ''}`}
                 key={period.id}
                 whileTap={{ scale: 0.96 }}
-                onClick={() => haptic('selection')}
+                onClick={() => {
+                  haptic('selection');
+                  navigate(`/timeline?period=${period.id}`);
+                }}
               >
                 <strong>{period.title}</strong>
                 <span>{period.range}</span>
@@ -118,10 +145,10 @@ export default function HomePage({ user }) {
         >
           <div className="featured-card__shade" />
           <div className="featured-card__content">
-            <span>Featured region</span>
-            <h2>Van Province</h2>
-            <p>Historic Armenian province surrounding Lake Van.</p>
-            <Link to="/place/van">Explore region <span>→</span></Link>
+            <span>Featured place</span>
+            <h2>{featured.title}</h2>
+            <p>{featured.summary}</p>
+            <Link to={`/place/${featured.slug}`}>Explore place <span>→</span></Link>
           </div>
         </motion.section>
       </section>

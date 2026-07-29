@@ -10,6 +10,7 @@ import { config } from './config.js';
 import { requireTrustedOrigin } from './middleware/origin.js';
 import authRouter from './routes/auth.js';
 import contentRouter from './routes/content.js';
+import telegramWebhookRouter from './routes/telegramWebhook.js';
 import { requireCsrf, requireSession } from './security/session.js';
 
 export function createApp() {
@@ -39,6 +40,16 @@ export function createApp() {
   app.use(express.json({ limit: '16kb', strict: true }));
   app.use(cookieParser());
   app.use(hpp());
+
+  // Telegram does not send a browser Origin header. Its webhook is authenticated
+  // with X-Telegram-Bot-Api-Secret-Token and is mounted before origin checks.
+  app.use('/api/telegram', rateLimit({
+    windowMs: 60_000,
+    limit: 90,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+  }), telegramWebhookRouter);
+
   app.use(requireTrustedOrigin);
 
   app.use('/api', rateLimit({
@@ -56,9 +67,9 @@ export function createApp() {
     message: { error: 'AUTH_RATE_LIMITED', message: 'Too many sign-in attempts.' },
   }));
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'vha-api', version: '0.1.2' }));
+  app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'vha-api', version: '0.2.0', telegramWebhook: config.telegramWebhookEnabled }));
   app.use('/api/auth', authRouter);
-  app.use('/api/content', contentRouter);
+  app.use('/api/content', requireSession, contentRouter);
 
   app.get('/api/me', requireSession, (req, res) => {
     res.set('Cache-Control', 'no-store');

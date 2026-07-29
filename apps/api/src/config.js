@@ -13,6 +13,8 @@ const schema = z.object({
   DEV_AUTH_BYPASS: booleanString.default('false'),
   TELEGRAM_AUTH_MAX_AGE_SECONDS: z.coerce.number().int().min(30).max(3600).default(600),
   SESSION_TTL_SECONDS: z.coerce.number().int().min(300).max(86400).default(900),
+  WEB_APP_URL: z.string().url().optional(),
+  TELEGRAM_WEBHOOK_SECRET: z.string().min(16).max(256).optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -30,4 +32,5 @@ export const config = {
   ...parsed.data,
   isProduction: parsed.data.NODE_ENV === 'production',
   allowedOrigins: parsed.data.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean),
+  telegramWebhookEnabled: Boolean(parsed.data.WEB_APP_URL && parsed.data.TELEGRAM_WEBHOOK_SECRET),
 };

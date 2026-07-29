@@ -1,7 +1,7 @@
 {
   "name": "virtual-historical-armenia",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.1",
   "workspaces": [
     "apps/web",
     "apps/api",

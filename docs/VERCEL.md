@@ -67,3 +67,7 @@ npm run telegram:set-webhook
 ```
 
 After Telegram confirms the webhook, `/start`, `/app` and `/help` can run through the Vercel function. Do not run the long-polling Telegraf process at the same time as the webhook.
+
+## Asset MIME verification
+
+After `npm run build`, run `npm run verify:vercel-static`. It starts the exported app in Vercel mode and confirms that a hashed Vite asset returns a JavaScript or CSS content type instead of `text/plain`/`text/html`.

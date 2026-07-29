@@ -1,7 +1,7 @@
 {
   "name": "virtual-historical-armenia",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "workspaces": [
     "apps/web",
     "apps/api",
@@ -18,7 +18,8 @@
     "start:bot": "npm run start -w @vha/bot",
     "start": "node server.js",
     "telegram:set-webhook": "node --env-file=apps/api/.env scripts/set-webhook.js",
-    "verify:build": "node scripts/verify-build.js"
+    "verify:build": "node scripts/verify-build.js",
+    "verify:vercel-static": "node scripts/verify-vercel-static.js"
   },
   "engines": {
     "node": "22.x"

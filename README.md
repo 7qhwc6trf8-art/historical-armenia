@@ -1,5 +1,10 @@
 # Virtual Historical Armenia — Telegram Mini App
 
+
+## Vercel static asset fix (v0.2.2)
+
+Vercel ignores `express.static()` for Express deployments. This release explicitly serves files bundled from `public/**` with `res.sendFile()`, preserving correct JavaScript/CSS MIME types and immutable caching for hashed Vite assets.
+
 A mobile-first React Telegram Mini App for exploring Western and Eastern Armenia through a protected historical catalog, animated discovery map, searchable places and period-aware timelines.
 
 ## v0.2.0 — Step 2
@@ -125,7 +130,7 @@ Telegram signs every request with `X-Telegram-Bot-Api-Secret-Token`, and the API
 
 Step 3 will add PostgreSQL, an admin/editor role system, reviewed citations, upload metadata, draft/publish workflows and persistent user favorites.
 
-## v0.2.1 Vercel asset fix
+## v0.2.2 Vercel asset fix
 
 This release fixes `text/html` MIME mismatch errors for generated Vite CSS/JS assets.
 

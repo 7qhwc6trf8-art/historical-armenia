@@ -1,5 +1,5 @@
 import express from 'express';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createApp } from './apps/api/src/app.js';
@@ -8,25 +8,57 @@ import { config } from './apps/api/src/config.js';
 const app = createApp();
 const isVercel = process.env.VERCEL === '1';
 const publicDirectory = fileURLToPath(new URL('./public/', import.meta.url));
+const publicRootWithSeparator = `${path.resolve(publicDirectory)}${path.sep}`;
 const indexFile = path.join(publicDirectory, 'index.html');
 
-// Vercel serves public/** from its CDN. Keep Express static only for local/self-hosted
-// production, where there is no Vercel static layer.
-if (!isVercel) {
-  app.use(express.static(publicDirectory, {
-    index: false,
-    etag: true,
-    maxAge: config.isProduction ? '1h' : 0,
-    setHeaders(res, filePath) {
-      if (filePath.includes(`${path.sep}assets${path.sep}`)) {
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-      }
-    },
-  }));
+function resolvePublicFile(requestPath) {
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(requestPath);
+  } catch {
+    return null;
+  }
+
+  // Remove the leading slash and normalize Windows/POSIX separators. Resolving
+  // against publicDirectory plus the prefix check blocks ../ traversal.
+  const relativePath = decodedPath.replace(/^\/+/, '').replaceAll('\\', '/');
+  if (!relativePath || relativePath.includes('\0')) return null;
+
+  const candidate = path.resolve(publicDirectory, relativePath);
+  if (candidate !== path.resolve(publicDirectory) && !candidate.startsWith(publicRootWithSeparator)) {
+    return null;
+  }
+
+  if (!existsSync(candidate) || !statSync(candidate).isFile()) return null;
+  return candidate;
 }
 
-// React Router fallback. Never return index.html for a missing CSS/JS/image file:
-// doing that produces the browser's "text/html MIME type mismatch" error.
+// Vercel's Express adapter ignores express.static(). The frontend build is
+// included in the function bundle through vercel.json, so serve existing files
+// explicitly with sendFile(). This guarantees correct MIME types for Vite's
+// hashed JS/CSS assets instead of letting them fall through to the SPA handler.
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (req.path === '/api' || req.path.startsWith('/api/')) return next();
+
+  const filePath = resolvePublicFile(req.path);
+  if (!filePath) return next();
+
+  if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  } else if (path.basename(filePath) === 'index.html') {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+  }
+
+  return res.sendFile(filePath, (error) => {
+    if (error) next(error);
+  });
+});
+
+// React Router fallback. Missing files must never return index.html because
+// browsers would reject HTML/plain-text responses as JavaScript or CSS.
 app.use((req, res, next) => {
   if (req.method !== 'GET' || req.path === '/api' || req.path.startsWith('/api/')) {
     return next();
@@ -46,8 +78,6 @@ app.use((req, res, next) => {
     });
   }
 
-  // Vite HTML must be revalidated so it never references hashed assets from an
-  // older deployment. Hashed files under /assets are cached immutably instead.
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');

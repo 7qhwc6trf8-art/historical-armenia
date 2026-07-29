@@ -1,0 +1,24 @@
+{
+  "name": "virtual-historical-armenia",
+  "private": true,
+  "version": "0.1.1",
+  "workspaces": [
+    "apps/web",
+    "apps/api",
+    "apps/bot"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:web": "npm run dev -w @vha/web",
+    "dev:api": "npm run dev -w @vha/api",
+    "dev:bot": "npm run dev -w @vha/bot",
+    "build": "npm run build -w @vha/web",
+    "test": "npm run test -w @vha/api",
+    "start:api": "npm run start -w @vha/api",
+    "start:bot": "npm run start -w @vha/bot"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "type": "module"
+}
